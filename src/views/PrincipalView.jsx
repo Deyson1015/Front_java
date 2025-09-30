@@ -4,7 +4,7 @@ import {
   Typography, Button, TextField, Stack, CssBaseline
 } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import axios from "axios";
+import { aprendizService } from "../services/api";
 
 const theme = createTheme({
   palette: {
@@ -28,9 +28,6 @@ const inputSX = {
 };
 
 const ListaAprendices = () => {
-  const API_BASE = "http://localhost:8080/api/v1/aprendiz";
-  //const API_BASE = "https://backadso-production.up.railway.app/api/v1/aprendiz"
-
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ nombre: "", apellido: "", email: "", telefono: "", direccion: "" });
@@ -39,7 +36,7 @@ const ListaAprendices = () => {
   const fetchTodos = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(API_BASE);
+      const res = await aprendizService.getAll();
       setData(res.data || []);
     } catch (e) {
       console.error("Error cargando aprendices:", e);
@@ -51,7 +48,7 @@ const ListaAprendices = () => {
     if (!idFiltro) return;
     try {
       setLoading(true);
-      const res = await axios.get(`${API_BASE}/${idFiltro}`);
+      const res = await aprendizService.getById(idFiltro);
       setData(res.data ? [res.data] : []);
     } catch { setData([]); } finally { setLoading(false); }
   };
@@ -59,7 +56,7 @@ const ListaAprendices = () => {
   const crearAprendiz = async () => {
     try {
       setLoading(true);
-      await axios.post(API_BASE, form, { headers: { "Content-Type": "application/json" } });
+      await aprendizService.create(form);
       setForm({ nombre: "", apellido: "", email: "", telefono: "", direccion: "" });
       await fetchTodos();
     } catch (e) { console.error("Error creando aprendiz:", e); }
@@ -68,7 +65,11 @@ const ListaAprendices = () => {
 
   const eliminarPorId = async () => {
     if (!idFiltro) return;
-    try { setLoading(true); await axios.delete(`${API_BASE}/${idFiltro}`); await fetchTodos(); }
+    try { 
+      setLoading(true); 
+      await aprendizService.delete(idFiltro); 
+      await fetchTodos(); 
+    }
     catch (e) { console.error("Error eliminando aprendiz:", e); }
     finally { setLoading(false); }
   };
